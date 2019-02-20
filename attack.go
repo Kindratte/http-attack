@@ -17,6 +17,7 @@ import (
 const (
 	defaultFreq   = 10000
 	defaultHost   = "localhost"
+	defaultTime   = 1
 	letterBytes   = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	letterIdxBits = 6                    // 6 bits to represent a letter index
 	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
@@ -45,13 +46,15 @@ func randStringBytesMaskImprSrc(n int) string {
 func main() {
 	var frequency = flag.Int("f", defaultFreq, "Posts in second")
 	var host = flag.String("h", defaultHost, "Server host")
+	var minutes = flag.Uint("m", defaultTime, "Time in minutes")
 
 	flag.Parse()
 
 	rate := vegeta.Rate{Freq: *frequency, Per: time.Second}
-	duration := 1 * time.Minute
+	duration := time.Duration(*minutes) * time.Minute
 	targets := make([]vegeta.Target, *frequency, *frequency)
 	log.Println(*frequency, "requests per second")
+	log.Printf("For %d minutes", *minutes)
 	for i := 0; i < *frequency; i++ {
 		protoName := randStringBytesMaskImprSrc(6)
 		locoName := randStringBytesMaskImprSrc(6)
@@ -81,4 +84,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	log.Println("Attack ends")
 }
