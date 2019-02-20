@@ -1,16 +1,20 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/tsenart/vegeta/lib"
+	"io/ioutil"
 	"log"
 	"math/rand"
+	"strconv"
 	"time"
 )
 
 const (
 	defaultFreq   = 10000
+	defaultHost   = "localhost"
 	letterBytes   = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	letterIdxBits = 6                    // 6 bits to represent a letter index
 	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
@@ -39,22 +43,20 @@ func RandStringBytesMaskImprSrc(n int) string {
 
 func main() {
 	var frequency = flag.Int("f", defaultFreq, "Posts in second")
+	var host = flag.String("h", defaultHost, "Server host")
 
 	flag.Parse()
 
 	rate := vegeta.Rate{Freq: *frequency, Per: time.Second}
-	duration := 5 * time.Minute
+	duration := 1 * time.Minute
 	targets := make([]vegeta.Target, *frequency, *frequency)
-	ports := [3]string{"8080", "8081", "8082"}
-	rand.Seed(time.Now().Unix())
-	log.Println(*frequency)
+	log.Println(*frequency, "requests per second")
 	for i := 0; i < *frequency; i++ {
-		port := ports[rand.Intn(len(ports))]
 		protoName := RandStringBytesMaskImprSrc(6)
 		locoName := RandStringBytesMaskImprSrc(6)
 		targets[i] = vegeta.Target{
 			Method: "POST",
-			URL:    fmt.Sprintf("http://localhost:%s/%s/%s/log", port, protoName, locoName),
+			URL:    fmt.Sprintf("http://%s:8080/%s/%s/log", *host, protoName, locoName),
 		}
 	}
 	log.Println("Targets created")
@@ -69,5 +71,12 @@ func main() {
 	}
 	metrics.Close()
 
-	fmt.Printf("99th percentile: %s\n", metrics.Latencies.P99)
+	data, err := json.MarshalIndent(metrics, "", "	")
+	if err != nil {
+		panic(err)
+	}
+	err = ioutil.WriteFile("c:/tools/vegeta"+strconv.Itoa(*frequency)+".json", data, 0644)
+	if err != nil {
+		panic(err)
+	}
 }
