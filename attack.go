@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/mitchellh/go-homedir"
 	"github.com/tsenart/vegeta/lib"
 	"io/ioutil"
 	"log"
 	"math/rand"
+	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -23,9 +25,8 @@ const (
 
 var src = rand.NewSource(time.Now().UnixNano())
 
-func RandStringBytesMaskImprSrc(n int) string {
+func randStringBytesMaskImprSrc(n int) string {
 	b := make([]byte, n)
-	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
 	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
 		if remain == 0 {
 			cache, remain = src.Int63(), letterIdxMax
@@ -52,8 +53,8 @@ func main() {
 	targets := make([]vegeta.Target, *frequency, *frequency)
 	log.Println(*frequency, "requests per second")
 	for i := 0; i < *frequency; i++ {
-		protoName := RandStringBytesMaskImprSrc(6)
-		locoName := RandStringBytesMaskImprSrc(6)
+		protoName := randStringBytesMaskImprSrc(6)
+		locoName := randStringBytesMaskImprSrc(6)
 		targets[i] = vegeta.Target{
 			Method: "POST",
 			URL:    fmt.Sprintf("http://%s:8080/%s/%s/log", *host, protoName, locoName),
@@ -75,7 +76,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	err = ioutil.WriteFile("c:/tools/vegeta"+strconv.Itoa(*frequency)+".json", data, 0644)
+	home, _ := homedir.Dir()
+	err = ioutil.WriteFile(filepath.Join(home, strconv.Itoa(*frequency)+".json"), data, 0644)
 	if err != nil {
 		panic(err)
 	}
