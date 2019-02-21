@@ -16,13 +16,14 @@ import (
 )
 
 const (
-	defaultFreq   = 10000
-	defaultHost   = "localhost"
-	defaultTime   = 1
-	letterBytes   = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	letterIdxBits = 6                    // 6 bits to represent a letter index
-	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
-	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+	defaultFreq        = 10000
+	defaultConnections = 10000
+	defaultHost        = "localhost"
+	defaultTime        = 1
+	letterBytes        = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	letterIdxBits      = 6                    // 6 bits to represent a letter index
+	letterIdxMask      = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+	letterIdxMax       = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 )
 
 var src = rand.NewSource(time.Now().UnixNano())
@@ -62,6 +63,7 @@ func main() {
 	var frequency = flag.Int("f", defaultFreq, "Posts in second")
 	var host = flag.String("h", defaultHost, "Server host or few separated by comma")
 	var minutes = flag.Uint("m", defaultTime, "Time in minutes")
+	var numOfConnections = flag.Int("c", defaultConnections, "Goroutines num")
 
 	flag.Parse()
 
@@ -86,7 +88,7 @@ func main() {
 	log.Println("Targets created")
 
 	targeter := vegeta.NewStaticTargeter(targets...)
-	attacker := vegeta.NewAttacker()
+	attacker := vegeta.NewAttacker(vegeta.Connections(*numOfConnections))
 
 	var metrics vegeta.Metrics
 	log.Println("Start attack")
