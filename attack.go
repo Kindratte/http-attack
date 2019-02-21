@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -43,12 +44,28 @@ func randStringBytesMaskImprSrc(n int) string {
 	return string(b)
 }
 
+func processUrlString(url string) []string {
+	urls := strings.Split(url, ",")
+	for i, s := range urls {
+		urls[i] = strings.TrimSpace(s)
+	}
+	return urls
+}
+
+func pickRandomElem(arr []string) string {
+	s := rand.NewSource(time.Now().Unix())
+	r := rand.New(s)
+	return arr[r.Intn(len(arr))]
+}
+
 func main() {
 	var frequency = flag.Int("f", defaultFreq, "Posts in second")
-	var host = flag.String("h", defaultHost, "Server host")
+	var host = flag.String("h", defaultHost, "Server host or few separated by comma")
 	var minutes = flag.Uint("m", defaultTime, "Time in minutes")
 
 	flag.Parse()
+
+	hosts := processUrlString(*host)
 
 	rate := vegeta.Rate{Freq: *frequency, Per: time.Second}
 	duration := time.Duration(*minutes) * time.Minute
@@ -60,7 +77,7 @@ func main() {
 		locoName := randStringBytesMaskImprSrc(6)
 		targets[i] = vegeta.Target{
 			Method: "POST",
-			URL:    fmt.Sprintf("http://%s:8080/%s/%s/log", *host, protoName, locoName),
+			URL:    fmt.Sprintf("http://%s:8080/%s/%s/log", pickRandomElem(hosts), protoName, locoName),
 		}
 	}
 	log.Println("Targets created")
