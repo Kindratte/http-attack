@@ -72,11 +72,14 @@ func main() {
 	targets := make([]vegeta.Target, *frequency, *frequency)
 	log.Println(*frequency, "requests per second")
 	log.Printf("For %d minutes", *minutes)
+	body := make([]byte, 1024)
+	rand.Read(body)
 	for i := 0; i < *frequency; i++ {
 		protoName := randStringBytesMaskImprSrc(6)
 		locoName := randStringBytesMaskImprSrc(6)
 		targets[i] = vegeta.Target{
 			Method: "POST",
+			Body:   body,
 			URL:    fmt.Sprintf("http://%s:8080/%s/%s/log", pickRandomElem(hosts), protoName, locoName),
 		}
 	}
