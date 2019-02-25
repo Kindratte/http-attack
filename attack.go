@@ -4,13 +4,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/mitchellh/go-homedir"
 	"github.com/tsenart/vegeta/lib"
-	"io/ioutil"
 	"log"
 	"math/rand"
-	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -101,10 +97,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	home, _ := homedir.Dir()
-	err = ioutil.WriteFile(filepath.Join(home, strconv.Itoa(*frequency)+".json"), data, 0644)
-	if err != nil {
-		panic(err)
-	}
-	log.Println("Attack ends")
+	log.Println(string(data))
 }
