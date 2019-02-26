@@ -64,6 +64,7 @@ func main() {
 	flag.Parse()
 
 	hosts := processUrlString(*host)
+	log.Println("Hosts:", hosts)
 
 	rate := vegeta.Rate{Freq: *frequency, Per: time.Second}
 	duration := time.Duration(*minutes) * time.Minute
