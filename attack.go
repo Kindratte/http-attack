@@ -79,7 +79,7 @@ func main() {
 		targets[i] = vegeta.Target{
 			Method: "POST",
 			Body:   body,
-			URL:    fmt.Sprintf("http://%s:8080/%s/%s/log", pickRandomElem(hosts), protoName, locoName),
+			URL:    fmt.Sprintf("http://%s/router/%s/%s/log", pickRandomElem(hosts), protoName, locoName),
 		}
 	}
 	log.Println("Targets created")
