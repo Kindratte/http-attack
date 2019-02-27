@@ -92,6 +92,7 @@ func main() {
 	for res := range attacker.Attack(targeter, rate, duration, "Big Bang!") {
 		metrics.Add(res)
 	}
+	metrics.Errors = []string{}
 	metrics.Close()
 
 	data, err := json.MarshalIndent(metrics, "", "	")
