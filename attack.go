@@ -24,7 +24,7 @@ const (
 	letterIdxMask      = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
 	letterIdxMax       = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 	defaultHost        = "https://localhost:8822"
-	bOPrefix           = "/api/air-bo"
+	testPrefix         = "/api/test"
 	authPrefix         = "/api/user/login"
 	defaultLocation    = 2
 	contentJSONHeader  = "application/json"
@@ -93,7 +93,7 @@ func writeSupplyToLocations(token, host string, location int) {
 		Method: "POST",
 		Body:   createArticleDependencies(),
 		Header: map[string][]string{"Authorization": {"Bearer " + token}, "Content-Type": {contentJSONHeader}},
-		URL:    host + bOPrefix + "/" + strconv.Itoa(location)}}
+		URL:    host + testPrefix + "/" + strconv.Itoa(location)}}
 	targeter := vegeta.NewStaticTargeter(targets...)
 	attacker := vegeta.NewAttacker(vegeta.Connections(defaultConnections), vegeta.Workers(uint64(defaultWorkers)))
 	attacker.Attack(targeter, vegeta.Rate{Freq: 1, Per: time.Second}, time.Duration(1)*time.Second, "Supply")
@@ -129,7 +129,7 @@ func main() {
 			Method: "POST",
 			Body:   createArticle(i),
 			Header: map[string][]string{"Authorization": {"Bearer " + token}, "Content-Type": {contentJSONHeader}},
-			URL:    *host + bOPrefix + "/" + strconv.Itoa(*location),
+			URL:    *host + testPrefix + "/" + strconv.Itoa(*location),
 		}
 	}
 	log.Println("Targets created")
