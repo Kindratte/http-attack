@@ -1,0 +1,60 @@
+{
+    "operations": [
+        {
+            "id": -4 ,
+            "type": "article_price_periods",
+            "parent_id": -3,
+            "parent_type": "article_prices",
+            "doc_id": -2,
+            "doc_type": "articles",
+            "data": {
+                "id_periods": 8,
+                "price": 1,
+                "state": 1
+            }
+        },
+        {
+            "id": -5 ,
+            "type": "article_price_periods",
+            "parent_id": -3,
+            "parent_type": "article_prices",
+            "doc_id": -2,
+            "doc_type": "articles",
+            "data": {
+                "id_periods": 9,
+                "price": 22,
+                "state": 1
+            }
+        },
+        {
+            "id": -3 ,
+            "type": "article_prices",
+            "parent_id": -2,
+            "parent_type": "articles",
+            "doc_id": -2,
+            "doc_type": "articles",
+            "data": {
+                "id_prices": 11,
+                "id_currency": 12,
+                "price": 1.7,
+                "vat": 21,
+                "vat_sign": "",
+                "use_group_vat": 0,
+                "profit_rate": 0,
+                "state": 1
+            }
+        },
+        {
+            "id": -2,
+            "type": "articles",
+            "data": {
+                "name": "Cola Light Excl",
+                "state": 1,
+                "article_number": 253,
+                "article_manual": 0,
+                "id_courses": 7,
+                "id_departament": 5
+            }
+        }
+    ]
+}

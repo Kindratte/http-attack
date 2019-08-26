@@ -1,26 +1,33 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"github.com/tsenart/vegeta/lib"
+	"io/ioutil"
 	"log"
 	"math/rand"
-	"strings"
+	"net/http"
+	"os"
+	"strconv"
 	"time"
 )
 
 const (
-	defaultFreq        = 10000
+	defaultFreq        = 1000
 	defaultConnections = 10000
 	defaultWorkers     = 10
-	defaultHost        = "localhost"
 	defaultTime        = 1
 	letterBytes        = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	letterIdxBits      = 6                    // 6 bits to represent a letter index
 	letterIdxMask      = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
 	letterIdxMax       = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+	defaultHost        = "https://localhost:8822"
+	bOPrefix           = "/api/air-bo"
+	authPrefix         = "/api/user/login"
+	defaultLocation    = 2
+	contentJSONHeader  = "application/json"
 )
 
 var src = rand.NewSource(time.Now().UnixNano())
@@ -42,22 +49,61 @@ func randStringBytesMaskImprSrc(n int) string {
 	return string(b)
 }
 
-func processUrlString(url string) []string {
-	urls := strings.Split(url, ",")
-	for i, s := range urls {
-		urls[i] = strings.TrimSpace(s)
+func createArticleDependencies() []byte {
+	jsonFile, err := os.Open("operations.json")
+	if err != nil {
+		panic(err)
 	}
-	return urls
+	defer jsonFile.Close()
+	data, err := ioutil.ReadAll(jsonFile)
+	if err != nil {
+		panic(err)
+	}
+	return data
 }
 
-func pickRandomElem(arr []string) string {
-	s := rand.NewSource(time.Now().Unix())
-	r := rand.New(s)
-	return arr[r.Intn(len(arr))]
+func createArticle(index int) []byte {
+	jsonFile, err := os.Open("art.json")
+	if err != nil {
+		panic(err)
+	}
+	defer jsonFile.Close()
+	data, err := ioutil.ReadAll(jsonFile)
+	if err != nil {
+		panic(err)
+	}
+	var abc map[string][]map[string]interface{}
+	err = json.Unmarshal(data, &abc)
+	if err != nil {
+		panic(err)
+	}
+	abc["operations"][3]["data"].(map[string]interface{})["name"] = randStringBytesMaskImprSrc(10)
+	if index&1 == 1 {
+		abc["operations"][3]["data"].(map[string]interface{})["state"] = 0
+	}
+	res, err := json.Marshal(abc)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+func writeSupplyToLocations(token, host string, location int) {
+	targets := []vegeta.Target{{
+		Method: "POST",
+		Body:   createArticleDependencies(),
+		Header: map[string][]string{"Authorization": {"Bearer " + token}, "Content-Type": {contentJSONHeader}},
+		URL:    host + bOPrefix + "/" + strconv.Itoa(location)}}
+	targeter := vegeta.NewStaticTargeter(targets...)
+	attacker := vegeta.NewAttacker(vegeta.Connections(defaultConnections), vegeta.Workers(uint64(defaultWorkers)))
+	attacker.Attack(targeter, vegeta.Rate{Freq: 1, Per: time.Second}, time.Duration(1)*time.Second, "Supply")
 }
 
 func main() {
 	var frequency = flag.Int("f", defaultFreq, "Posts in second")
+	var login = flag.String("l", "", "Login in unTill Air")
+	var password = flag.String("p", "", "Password")
+	var location = flag.Int("loc", defaultLocation, "Location number")
 	var host = flag.String("h", defaultHost, "Server host or few separated by comma")
 	var minutes = flag.Uint("m", defaultTime, "Time in minutes")
 	var numOfConnections = flag.Int("c", defaultConnections, "Connections num")
@@ -65,23 +111,25 @@ func main() {
 
 	flag.Parse()
 
-	hosts := processUrlString(*host)
-	log.Println("Hosts:", strings.Join(hosts, ", "))
+	log.Println("Host:", *host)
 
 	rate := vegeta.Rate{Freq: *frequency, Per: time.Second}
-	duration := time.Duration(*minutes) * time.Minute
-	targets := make([]vegeta.Target, *frequency, *frequency)
+	duration := time.Duration(50) * time.Second
+	targetsNum := 10000
+	targets := make([]vegeta.Target, targetsNum, targetsNum)
 	log.Println(*frequency, "requests per second")
 	log.Printf("For %d minutes", *minutes)
-	body := make([]byte, 1024)
-	rand.Read(body)
-	for i := 0; i < *frequency; i++ {
-		protoName := randStringBytesMaskImprSrc(6)
-		locoName := randStringBytesMaskImprSrc(6)
+
+	token := authOnServer(*login, *password, *host)
+
+	writeSupplyToLocations(token, *host, *location)
+
+	for i := 1; i < targetsNum; i++ {
 		targets[i] = vegeta.Target{
 			Method: "POST",
-			Body:   body,
-			URL:    fmt.Sprintf("http://%s/router/%s/%s/log", pickRandomElem(hosts), protoName, locoName),
+			Body:   createArticle(i),
+			Header: map[string][]string{"Authorization": {"Bearer " + token}, "Content-Type": {contentJSONHeader}},
+			URL:    *host + bOPrefix + "/" + strconv.Itoa(*location),
 		}
 	}
 	log.Println("Targets created")
@@ -94,7 +142,6 @@ func main() {
 	for res := range attacker.Attack(targeter, rate, duration, "Big Bang!") {
 		metrics.Add(res)
 	}
-	metrics.Errors = []string{}
 	metrics.Close()
 
 	data, err := json.MarshalIndent(metrics, "", "	")
@@ -102,4 +149,31 @@ func main() {
 		panic(err)
 	}
 	log.Println(string(data))
+}
+
+func authOnServer(login, password, host string) string {
+	creds := map[string]string{"login": login, "password": password}
+	data, _ := json.Marshal(creds)
+	resp, err := http.Post(host+authPrefix, contentJSONHeader, bytes.NewReader(data))
+	if err != nil {
+		panic(err)
+	}
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	respStr := struct {
+		Status     string
+		StatusCode int
+		Data       interface{}
+	}{}
+	err = json.Unmarshal(bodyBytes, &respStr)
+	if err != nil {
+		panic(err)
+	}
+	if respStr.StatusCode != http.StatusOK {
+		panic("can't login to server: " + respStr.Data.(string))
+	}
+	respData := respStr.Data.(map[string]interface{})
+	return respData["token"].(string)
 }

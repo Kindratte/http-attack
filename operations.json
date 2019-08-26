@@ -1,0 +1,121 @@
+{
+  "operations": [
+    {
+      "id": -1234123,
+      "type": "category",
+      "data": {
+        "name": "Bar",
+        "hq_id": "Bar",
+        "state": 1
+      }
+    },
+    {
+      "id": -1243,
+      "type": "sales_area",
+      "data": {
+        "name": "sa",
+        "hq_id": "sa",
+        "state": 1
+      }
+    },
+    {
+      "id": -1243123,
+      "type": "sales_area_exceptions",
+      "parent_id": -1243,
+      "parent_type": "sales_area",
+      "doc_id": -1243,
+      "doc_type": "sales_area",
+      "data": {
+        "name": "sae1",
+        "hq_id": "sae1",
+        "state": 1
+      }
+    },
+    {
+      "id": -12431235,
+      "type": "sales_area_exceptions",
+      "parent_id": -1243,
+      "parent_type": "sales_area",
+      "doc_id": -1243,
+      "doc_type": "sales_area",
+      "data": {
+        "name": "sae2",
+        "hq_id": "sae2",
+        "state": 1
+      }
+    },
+    {
+      "id": -213123123,
+      "type": "department",
+      "data": {
+        "name": "dept",
+        "hq_id": "dept",
+        "state": 1
+      }
+    },
+    {
+      "id": -12431541254124124,
+      "type": "food_group",
+      "data": {
+        "name": "fg",
+        "hq_id": "fg",
+        "id_category": 1,
+        "state": 1
+      }
+    },
+    {
+      "id": -214235135,
+      "type": "courses",
+      "data": {
+        "name": "cour",
+        "hq_id": "cour",
+        "state": 1
+      }
+    },
+    {
+      "id": -1231231313,
+      "type": "periods",
+      "data": {
+        "name": "per1",
+        "hq_id": "per1",
+        "state": 1
+      }
+    },
+    {
+      "id": -12312,
+      "type": "periods",
+      "data": {
+        "name": "per2",
+        "hq_id": "per2",
+        "state": 1
+      }
+    },
+    {
+      "id": -12431541254124,
+      "type": "prices",
+      "data": {
+        "name": "prs1",
+        "hq_id": "prs1",
+        "state": 1
+      }
+    },
+    {
+      "id": -1243154432,
+      "type": "prices",
+      "data": {
+        "name": "prs2",
+        "hq_id": "prs2",
+        "state": 1
+      }
+    },
+    {
+      "id": -1243154234190,
+      "type": "currency",
+      "data": {
+        "name": "crcy",
+        "hq_id": "crcy",
+        "state": 1
+      }
+    }
+  ]
+}
