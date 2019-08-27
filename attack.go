@@ -51,7 +51,7 @@ func randStringBytesMaskImprSrc(n int) string {
 }
 
 func createArticleDependencies() []byte {
-	jsonFile, err := os.Open("operations.json")
+	jsonFile, err := os.Open("./operations.json")
 	if err != nil {
 		panic(err)
 	}
@@ -64,7 +64,7 @@ func createArticleDependencies() []byte {
 }
 
 func createArticle(index int) []byte {
-	jsonFile, err := os.Open("art.json")
+	jsonFile, err := os.Open("./art.json")
 	if err != nil {
 		panic(err)
 	}
