@@ -93,8 +93,11 @@ func writeSupplyToLocations(token, uRL string) {
 	targets := []vegeta.Target{{
 		Method: "POST",
 		Body:   createArticleDependencies(),
-		Header: map[string][]string{"Authorization": {"Bearer " + token}, "Content-Type": {contentJSONHeader}},
+		Header: map[string][]string{"Content-Type": {contentJSONHeader}},
 		URL:    uRL}}
+	if token != "" {
+		targets[0].Header["Authorization"] = []string{"Bearer " + token}
+	}
 	targeter := vegeta.NewStaticTargeter(targets...)
 	attacker := vegeta.NewAttacker(vegeta.Connections(defaultConnections), vegeta.Workers(uint64(defaultWorkers)))
 	attacker.Attack(targeter, vegeta.Rate{Freq: 1, Per: time.Second}, time.Duration(1)*time.Second, "Supply")
@@ -110,6 +113,7 @@ func main() {
 	var numOfConnections = flag.Int("c", defaultConnections, "Connections num")
 	var numOfWorkers = flag.Int("w", defaultWorkers, "Workers num")
 	var test = flag.Bool("t", false, "Writes in /api/test queue")
+	var noAuth = flag.Bool("na", false, "If true don't try auth on server")
 
 	flag.Parse()
 
@@ -122,7 +126,11 @@ func main() {
 	log.Println(*frequency, "requests per second")
 	log.Printf("For %d minutes", *minutes)
 
-	token := authOnServer(*login, *password, *host)
+	token := ""
+
+	if !*noAuth {
+		token = authOnServer(*login, *password, *host)
+	}
 
 	var uRL string
 	if *test {
@@ -137,8 +145,11 @@ func main() {
 		targets[i] = vegeta.Target{
 			Method: "POST",
 			Body:   createArticle(i),
-			Header: map[string][]string{"Authorization": {"Bearer " + token}, "Content-Type": {contentJSONHeader}},
+			Header: map[string][]string{"Content-Type": {contentJSONHeader}},
 			URL:    uRL,
+		}
+		if !*noAuth {
+			targets[i].Header["Authorization"] = []string{"Bearer " + token}
 		}
 	}
 	log.Println("Targets created")
