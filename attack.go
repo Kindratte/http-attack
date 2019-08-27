@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"github.com/tsenart/vegeta/lib"
@@ -10,7 +11,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -185,6 +185,7 @@ func main() {
 func authOnServer(login, password, host string) string {
 	creds := map[string]string{"login": login, "password": password}
 	data, _ := json.Marshal(creds)
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	resp, err := http.Post(host+authPrefix, contentJSONHeader, bytes.NewReader(data))
 	if err != nil {
 		panic(err)
