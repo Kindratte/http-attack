@@ -167,7 +167,7 @@ func main() {
 			Method: "POST",
 			Body:   createArticle(i),
 			Header: map[string][]string{"Content-Type": {contentJSONHeader}},
-			URL:    uRL + strconv.Itoa(rand.Intn(100)),
+			URL:    uRL + strconv.Itoa(rand.Intn(99)+1),
 		}
 		if !*noAuth {
 			targets[i].Header["Authorization"] = []string{"Bearer " + token}
