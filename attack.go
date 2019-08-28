@@ -11,7 +11,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -149,8 +148,9 @@ func main() {
 	var uRL string
 	if *test {
 		uRL = *host + testPrefix + "/" + strconv.Itoa(*location)
-	} else if *testCas {
-		uRL = *host + testCasPrefix + "/" + strconv.Itoa(*location)
+		if *testCas {
+			uRL = *host + testCasPrefix + "/" + strconv.Itoa(*location)
+		}
 	} else {
 		uRL = *host + bOPrefix + "/" + strconv.Itoa(*location)
 	}
