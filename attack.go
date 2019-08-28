@@ -131,6 +131,8 @@ func main() {
 
 	flag.Parse()
 
+	rand.Seed(time.Now().UnixNano())
+
 	log.Println("Host:", *host)
 
 	rate := vegeta.Rate{Freq: *frequency, Per: time.Second}
@@ -148,22 +150,24 @@ func main() {
 
 	var uRL string
 	if *test {
-		uRL = *host + testPrefix + "/" + strconv.Itoa(*location)
+		uRL = *host + testPrefix + "/"
 		if *testCas {
-			uRL = *host + testCasPrefix + "/" + strconv.Itoa(*location)
+			uRL = *host + testCasPrefix + "/"
 		}
 	} else {
 		uRL = *host + bOPrefix + "/" + strconv.Itoa(*location)
 	}
 
-	writeSupplyToLocations(token, uRL)
+	if !*test {
+		writeSupplyToLocations(token, uRL)
+	}
 
 	for i := 1; i < targetsNum; i++ {
 		targets[i] = vegeta.Target{
 			Method: "POST",
 			Body:   createArticle(i),
 			Header: map[string][]string{"Content-Type": {contentJSONHeader}},
-			URL:    uRL,
+			URL:    uRL + strconv.Itoa(rand.Intn(100)),
 		}
 		if !*noAuth {
 			targets[i].Header["Authorization"] = []string{"Bearer " + token}
