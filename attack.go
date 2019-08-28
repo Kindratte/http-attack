@@ -11,7 +11,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -28,6 +27,7 @@ const (
 	defaultHost        = "https://localhost:8822"
 	bOPrefix           = "/api/air-bo"
 	testPrefix         = "/api/test"
+	testCasPrefix      = "/api/test-cas"
 	authPrefix         = "/api/user/login"
 	defaultLocation    = 2
 	contentJSONHeader  = "application/json"
@@ -53,12 +53,7 @@ func randStringBytesMaskImprSrc(n int) string {
 }
 
 func createArticleDependencies() []byte {
-	ex, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-	exPath := filepath.Dir(ex)
-	jsonFile, err := os.Open(exPath + "/operations.json")
+	jsonFile, err := os.Open("./operations.json")
 	if err != nil {
 		panic(err)
 	}
@@ -71,12 +66,7 @@ func createArticleDependencies() []byte {
 }
 
 func createArticle(index int) []byte {
-	ex, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-	exPath := filepath.Dir(ex)
-	jsonFile, err := os.Open(exPath + "/art.json")
+	jsonFile, err := os.Open("./art.json")
 	if err != nil {
 		panic(err)
 	}
@@ -125,6 +115,7 @@ func main() {
 	var numOfConnections = flag.Int("c", defaultConnections, "Connections num")
 	var numOfWorkers = flag.Int("w", defaultWorkers, "Workers num")
 	var test = flag.Bool("t", false, "Writes in /api/test queue")
+	var testCas = flag.Bool("tc", false, "Writes in /api/test-cas queue")
 	var noAuth = flag.Bool("na", false, "If true don't try auth on server")
 
 	flag.Parse()
@@ -147,6 +138,8 @@ func main() {
 	var uRL string
 	if *test {
 		uRL = *host + testPrefix + "/" + strconv.Itoa(*location)
+	} else if *testCas {
+		uRL = *host + testCasPrefix + "/" + strconv.Itoa(*location)
 	} else {
 		uRL = *host + bOPrefix + "/" + strconv.Itoa(*location)
 	}
