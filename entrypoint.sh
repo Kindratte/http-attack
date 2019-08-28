@@ -9,5 +9,6 @@ LOGIN=${LOGIN:-""}
 PASSWORD=${PASSWORD:-""}
 TEST=${TEST:-true}
 NO_AUTH=${NO_AUTH:-false}
+CAS=${CAS:-false}
 
-exec /http-attack/http-attack -f="${FREQUENCY}" -h="${SERVER_HOST}" -m="${MINUTES}" -c="${NUM_OF_CONNECTIONS}" -loc="$LOCATION" -l="$LOGIN" -p="$PASSWORD" -t="$TEST" -na="$NO_AUTH"
+exec /http-attack/http-attack -f="${FREQUENCY}" -h="${SERVER_HOST}" -m="${MINUTES}" -c="${NUM_OF_CONNECTIONS}" -loc="$LOCATION" -l="$LOGIN" -p="$PASSWORD" -t="$TEST" -na="$NO_AUTH" -tc="$CAS"
