@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -53,7 +54,12 @@ func randStringBytesMaskImprSrc(n int) string {
 }
 
 func createArticleDependencies() []byte {
-	jsonFile, err := os.Open("./operations.json")
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+	jsonFile, err := os.Open(exPath + "/operations.json")
 	if err != nil {
 		panic(err)
 	}
@@ -66,7 +72,12 @@ func createArticleDependencies() []byte {
 }
 
 func createArticle(index int) []byte {
-	jsonFile, err := os.Open("./art.json")
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+	jsonFile, err := os.Open(exPath + "/art.json")
 	if err != nil {
 		panic(err)
 	}
