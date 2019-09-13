@@ -189,20 +189,12 @@ func main() {
 
 	var metrics vegeta.Metrics
 	log.Println("Start attack")
-	var check []byte
 	for res := range attacker.Attack(targeter, rate, duration, "Big Bang!") {
 		metrics.Add(res)
-		check = res.Body
 	}
 	metrics.Close()
 
-	data, err := json.MarshalIndent(check, "", "	")
-	if err != nil {
-		panic(err)
-	}
-	log.Println(string(data))
-
-	data, err = json.MarshalIndent(metrics, "", "	")
+	data, err := json.MarshalIndent(metrics, "", "	")
 	if err != nil {
 		panic(err)
 	}
