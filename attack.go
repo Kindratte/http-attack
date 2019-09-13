@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"github.com/tsenart/vegeta/lib"
@@ -11,7 +10,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -30,8 +28,10 @@ const (
 	testPrefix         = "/api/test"
 	testCasPrefix      = "/api/test-cas"
 	authPrefix         = "/api/user/login"
+	selectPrefix       = "/api/air-bo-view/articles"
 	defaultLocation    = 2
 	contentJSONHeader  = "application/json"
+	defaultPageSize    = 100
 )
 
 var src = rand.NewSource(time.Now().UnixNano())
@@ -54,12 +54,7 @@ func randStringBytesMaskImprSrc(n int) string {
 }
 
 func createArticleDependencies() []byte {
-	ex, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-	exPath := filepath.Dir(ex)
-	jsonFile, err := os.Open(exPath + "/operations.json")
+	jsonFile, err := os.Open("./operations.json")
 	if err != nil {
 		panic(err)
 	}
@@ -72,12 +67,7 @@ func createArticleDependencies() []byte {
 }
 
 func createArticle(index int) []byte {
-	ex, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-	exPath := filepath.Dir(ex)
-	jsonFile, err := os.Open(exPath + "/art.json")
+	jsonFile, err := os.Open("./art.json")
 	if err != nil {
 		panic(err)
 	}
@@ -100,6 +90,11 @@ func createArticle(index int) []byte {
 		panic(err)
 	}
 	return res
+}
+
+func createSelectQuery(loc int) []byte {
+	body := `{"location": [` + strconv.Itoa(loc) + `],"show_deleted": 1}`
+	return []byte(body)
 }
 
 func writeSupplyToLocations(token, uRL string) {
@@ -128,6 +123,7 @@ func main() {
 	var test = flag.Bool("t", false, "Writes in /api/test queue")
 	var testCas = flag.Bool("tc", false, "Writes in /api/test-cas queue")
 	var noAuth = flag.Bool("na", false, "If true don't try auth on server")
+	var selectQuery = flag.Bool("s", false, "If true select articles, not put")
 
 	flag.Parse()
 
@@ -136,11 +132,16 @@ func main() {
 	log.Println("Host:", *host)
 
 	rate := vegeta.Rate{Freq: *frequency, Per: time.Second}
-	duration := time.Duration(50) * time.Second
+	duration := time.Duration(*minutes) * time.Minute
 	targetsNum := 10000
 	targets := make([]vegeta.Target, targetsNum, targetsNum)
 	log.Println(*frequency, "requests per second")
 	log.Printf("For %d minutes", *minutes)
+	if *selectQuery {
+		log.Println("Operation select")
+	} else {
+		log.Println("Operation insert")
+	}
 
 	token := ""
 
@@ -149,25 +150,33 @@ func main() {
 	}
 
 	var uRL string
-	if *test {
-		uRL = *host + testPrefix + "/"
-		if *testCas {
-			uRL = *host + testCasPrefix + "/"
-		}
+	if *selectQuery {
+		uRL = *host + selectPrefix
 	} else {
-		uRL = *host + bOPrefix + "/" + strconv.Itoa(*location)
-	}
-
-	if !*test {
-		writeSupplyToLocations(token, uRL)
+		if *test {
+			uRL = *host + testPrefix + "/"
+			if *testCas {
+				uRL = *host + testCasPrefix + "/"
+			}
+		} else {
+			uRL = *host + bOPrefix + "/" + strconv.Itoa(*location)
+		}
+		if !*test {
+			writeSupplyToLocations(token, uRL)
+		}
 	}
 
 	for i := 1; i < targetsNum; i++ {
 		targets[i] = vegeta.Target{
 			Method: "POST",
-			Body:   createArticle(i),
 			Header: map[string][]string{"Content-Type": {contentJSONHeader}},
-			URL:    uRL + strconv.Itoa(rand.Intn(99)+1),
+		}
+		if !*selectQuery {
+			targets[i].Body = createArticle(i)
+			targets[i].URL = uRL + strconv.Itoa(rand.Intn(99)+1)
+		} else {
+			targets[i].Body = createSelectQuery(*location)
+			targets[i].URL = uRL
 		}
 		if !*noAuth {
 			targets[i].Header["Authorization"] = []string{"Bearer " + token}
@@ -180,12 +189,20 @@ func main() {
 
 	var metrics vegeta.Metrics
 	log.Println("Start attack")
+	var check []byte
 	for res := range attacker.Attack(targeter, rate, duration, "Big Bang!") {
 		metrics.Add(res)
+		check = res.Body
 	}
 	metrics.Close()
 
-	data, err := json.MarshalIndent(metrics, "", "	")
+	data, err := json.MarshalIndent(check, "", "	")
+	if err != nil {
+		panic(err)
+	}
+	log.Println(string(data))
+
+	data, err = json.MarshalIndent(metrics, "", "	")
 	if err != nil {
 		panic(err)
 	}
@@ -195,7 +212,6 @@ func main() {
 func authOnServer(login, password, host string) string {
 	creds := map[string]string{"login": login, "password": password}
 	data, _ := json.Marshal(creds)
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	resp, err := http.Post(host+authPrefix, contentJSONHeader, bytes.NewReader(data))
 	if err != nil {
 		panic(err)
