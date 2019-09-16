@@ -133,8 +133,7 @@ func main() {
 
 	rate := vegeta.Rate{Freq: *frequency, Per: time.Second}
 	duration := time.Duration(*minutes) * time.Minute
-	targetsNum := *frequency * int(duration.Seconds())
-	targets := make([]vegeta.Target, targetsNum, targetsNum)
+	targets := make([]vegeta.Target, *frequency, *frequency)
 	log.Println(*frequency, "requests per second")
 	log.Printf("For %d minutes", *minutes)
 	if *selectQuery {
@@ -166,7 +165,7 @@ func main() {
 		}
 	}
 
-	for i := 1; i < targetsNum; i++ {
+	for i := 1; i < *frequency; i++ {
 		targets[i] = vegeta.Target{
 			Method: "POST",
 			Header: map[string][]string{"Content-Type": {contentJSONHeader}},
