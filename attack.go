@@ -133,7 +133,7 @@ func main() {
 
 	rate := vegeta.Rate{Freq: *frequency, Per: time.Second}
 	duration := time.Duration(*minutes) * time.Minute
-	targetsNum := 10000
+	targetsNum := *frequency * int(duration.Seconds())
 	targets := make([]vegeta.Target, targetsNum, targetsNum)
 	log.Println(*frequency, "requests per second")
 	log.Printf("For %d minutes", *minutes)
